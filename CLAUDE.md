@@ -63,6 +63,11 @@ All Dart imports are absolute (`package:lamu/...`) — never relative, except
 
 ## Conventions
 
+**Language.** All user-facing text is in Spanish — screen labels, buttons, empty
+and error states, validation messages, seeded product and expense-category
+names. Everything else is in English: identifiers, file and folder names, code
+comments, commit messages, and this documentation.
+
 **Sync columns.** Every syncable table carries `serverVersion`, `isDirty`,
 `isDeleted`. Deletes are soft — always filter `isDeleted.equals(false)` in list
 queries; mutations set `isDirty = true`. The sync watermark lives in
