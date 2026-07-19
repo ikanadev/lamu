@@ -1,0 +1,34 @@
+import 'package:flutter/widgets.dart';
+import 'package:vector_graphics/vector_graphics.dart';
+
+class AppIcon extends StatelessWidget {
+  const AppIcon({super.key, required this.icon, this.size = 24, this.color});
+
+  final AppIcons icon;
+  final double size;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    return VectorGraphic(
+      loader: AssetBytesLoader(icon.assetPath),
+      width: size,
+      height: size,
+      colorFilter:
+          color == null ? null : ColorFilter.mode(color!, BlendMode.srcIn),
+    );
+  }
+}
+
+enum AppIcons {
+  sample;
+
+  String get assetPath => 'assets/icons/vec/$name.vec';
+
+  static AppIcons? tryParse(String value) {
+    for (final icon in values) {
+      if (icon.name == value) return icon;
+    }
+    return null;
+  }
+}
