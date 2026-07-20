@@ -21,7 +21,10 @@ class AppIcon extends StatelessWidget {
 }
 
 enum AppIcons {
-  sample;
+  frappe,
+  juice,
+  sample,
+  strawberryCream;
 
   String get assetPath => 'assets/icons/vec/$name.vec';
 

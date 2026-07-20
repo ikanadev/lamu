@@ -15,8 +15,8 @@ class ProductCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    // Every seeded product still carries the placeholder icon key; the fallback
-    // keeps the card rendering until real icons are designed.
+    // Seeded products carry a real icon key; the fallback keeps the card
+    // rendering for any unrecognized key.
     final icon = AppIcons.tryParse(summary.product.icon) ?? AppIcons.sample;
 
     return Card(
@@ -24,14 +24,10 @@ class ProductCard extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.s16),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s32, AppSpacing.s32, AppSpacing.s32),
           child: Row(
             children: [
-              AppIcon(
-                icon: icon,
-                size: 72,
-                color: theme.colorScheme.primary,
-              ),
+              AppIcon(icon: icon, size: 72),
               const SizedBox(width: AppSpacing.s16),
               Expanded(
                 child: Text(

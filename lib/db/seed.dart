@@ -61,12 +61,13 @@ Future<void> seedCatalog(AppDatabase db) async {
   final frape = uuid.v4();
   final jugo = uuid.v4();
 
+  // Icon keys match the `AppIcons` enum names (see lib/widgets/app_icon.dart).
   await db.batch((b) {
     b.insertAll(db.dbProducts, [
       DbProductsCompanion.insert(
-          id: fresas, name: 'Fresas con crema', icon: _genericIcon),
-      DbProductsCompanion.insert(id: frape, name: 'Frapé', icon: _genericIcon),
-      DbProductsCompanion.insert(id: jugo, name: 'Jugo', icon: _genericIcon),
+          id: fresas, name: 'Fresas con crema', icon: 'strawberryCream'),
+      DbProductsCompanion.insert(id: frape, name: 'Frapé', icon: 'frappe'),
+      DbProductsCompanion.insert(id: jugo, name: 'Jugo', icon: 'juice'),
     ]);
   });
 
