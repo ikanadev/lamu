@@ -13,6 +13,10 @@ abstract final class Money {
     return '$sign$bolivianos.$remainder';
   }
 
-  /// `1800` -> `'Bs 18.00'`.
-  static String formatWithSymbol(int cents) => '$symbol ${format(cents)}';
+  /// `1800` -> `'18.00 Bs'`. Symbol trails the amount, as written locally.
+  static String formatWithSymbol(int cents) => '${format(cents)} $symbol';
+
+  /// Stand-in for a masked amount, shaped like a formatted one so hiding a
+  /// value doesn't shift the layout around it.
+  static const String maskedWithSymbol = '***.** $symbol';
 }

@@ -10,7 +10,19 @@ class AppStateNotifier extends _$AppStateNotifier {
   @override
   AppState build() {
     final prefs = ref.read(sharedPrefsProvider);
-    return AppState(sampleFlag: prefs.getBool(PrefsKeys.sampleFlag) ?? false);
+    return AppState(
+      sampleFlag: prefs.getBool(PrefsKeys.sampleFlag) ?? false,
+      hideEarnings: prefs.getBool(PrefsKeys.hideEarnings) ?? false,
+    );
+  }
+
+  void toggleHideEarnings() {
+    final next = state.copyWith(hideEarnings: !state.hideEarnings);
+    state = next;
+    ref
+        .read(sharedPrefsProvider)
+        .setBool(PrefsKeys.hideEarnings, next.hideEarnings)
+        .ignore();
   }
 
   void toggleSampleFlag() {

@@ -143,6 +143,29 @@ class SaleRepository {
         .toList();
   }
 
+  /// What was actually charged within [from] (inclusive) and [to] (exclusive),
+  /// in cents — the sum of every sale's `total`, discounts included.
+  ///
+  /// Deliberately not broken down per product: a discount applies to the sale
+  /// as a whole, so there is no honest way to attribute it to the individual
+  /// lines. Only the store-wide figure is meaningful.
+  Future<int> totalEarned({
+    required DateTime from,
+    required DateTime to,
+  }) async {
+    final sales = _database.dbSales;
+    final earned = sales.total.sum();
+
+    final query = _database.selectOnly(sales)
+      ..where(sales.isDeleted.equals(false) &
+          sales.soldAt.isBiggerOrEqualValue(from) &
+          sales.soldAt.isSmallerThanValue(to))
+      ..addColumns([earned]);
+
+    final row = await query.getSingle();
+    return row.read(earned) ?? 0;
+  }
+
   /// Units sold per product within [from] (inclusive) and [to] (exclusive),
   /// keyed by product id. Products that sold nothing are absent from the map.
   ///

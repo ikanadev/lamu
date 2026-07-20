@@ -13,7 +13,7 @@ Future<void> main() async {
 
   final prefs = await SharedPreferencesWithCache.create(
     cacheOptions: SharedPreferencesWithCacheOptions(
-      allowList: {PrefsKeys.sampleFlag},
+      allowList: {PrefsKeys.sampleFlag, PrefsKeys.hideEarnings},
     ),
   );
 

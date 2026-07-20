@@ -9,17 +9,11 @@ part of 'products_summary_provider.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 /// Every active product with the units of it sold since local midnight.
-///
-/// The window is computed on each read, so a session left open across midnight
-/// reports the new day once this provider is invalidated.
 
 @ProviderFor(productsSummary)
 final productsSummaryProvider = ProductsSummaryProvider._();
 
 /// Every active product with the units of it sold since local midnight.
-///
-/// The window is computed on each read, so a session left open across midnight
-/// reports the new day once this provider is invalidated.
 
 final class ProductsSummaryProvider
     extends
@@ -32,9 +26,6 @@ final class ProductsSummaryProvider
         $FutureModifier<List<ProductSalesSummary>>,
         $FutureProvider<List<ProductSalesSummary>> {
   /// Every active product with the units of it sold since local midnight.
-  ///
-  /// The window is computed on each read, so a session left open across midnight
-  /// reports the new day once this provider is invalidated.
   ProductsSummaryProvider._()
     : super(
         from: null,
@@ -61,4 +52,4 @@ final class ProductsSummaryProvider
   }
 }
 
-String _$productsSummaryHash() => r'063057f8a87e6949c913d849b95f0f2b4715a986';
+String _$productsSummaryHash() => r'bf1f81816c05cab8fefcf41fed754d7ca3d43424';
