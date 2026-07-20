@@ -143,6 +143,40 @@ class SaleRepository {
         .toList();
   }
 
+  /// Units sold per product within [from] (inclusive) and [to] (exclusive),
+  /// keyed by product id. Products that sold nothing are absent from the map.
+  ///
+  /// Grouped in SQL over the item lines, joined up to their variant to reach
+  /// the product; the window is applied to the parent sale's `soldAt`.
+  Future<Map<String, int>> soldUnitsByProduct({
+    required DateTime from,
+    required DateTime to,
+  }) async {
+    final items = _database.dbSaleItems;
+    final sales = _database.dbSales;
+    final variants = _database.dbProductVariants;
+
+    final soldUnits = items.quantity.sum();
+
+    final query = _database.selectOnly(items).join([
+      innerJoin(sales, sales.id.equalsExp(items.saleId)),
+      innerJoin(variants, variants.id.equalsExp(items.variantId)),
+    ])
+      ..where(items.isDeleted.equals(false) &
+          sales.isDeleted.equals(false) &
+          sales.soldAt.isBiggerOrEqualValue(from) &
+          sales.soldAt.isSmallerThanValue(to))
+      ..addColumns([variants.productId, soldUnits])
+      ..groupBy([variants.productId]);
+
+    final rows = await query.get();
+
+    return {
+      for (final row in rows)
+        row.read(variants.productId)!: row.read(soldUnits) ?? 0,
+    };
+  }
+
   Future<void> deleteSale({required String id}) async {
     await (_database.update(_database.dbSales)..where((s) => s.id.equals(id)))
         .write(const DbSalesCompanion(
