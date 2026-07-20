@@ -68,6 +68,12 @@ and error states, validation messages, seeded product and expense-category
 names. Everything else is in English: identifiers, file and folder names, code
 comments, commit messages, and this documentation.
 
+**Money.** The currency is the Bolivian boliviano (Bs). Every monetary value —
+prices, sale totals, expense amounts — is stored and passed around as a whole
+number of **cents**, in `integer()` columns and `int` Dart fields. Never `real()`
+or `double`: floating point does not sum cleanly, and these values get
+aggregated. Convert to Bs only at the display edge, in a formatter.
+
 **Sync columns.** Every syncable table carries `serverVersion`, `isDirty`,
 `isDeleted`. Deletes are soft — always filter `isDeleted.equals(false)` in list
 queries; mutations set `isDirty = true`. The sync watermark lives in
