@@ -1,11 +1,11 @@
 import 'package:go_router/go_router.dart';
 
-import 'package:lamu/screens/home/home_screen.dart';
+import 'package:lamu/screens/products/products_screen.dart';
 import 'package:lamu/screens/sample/sample_screen.dart';
 import 'package:lamu/widgets/app_shell.dart';
 
 final router = GoRouter(
-  initialLocation: '/home',
+  initialLocation: '/products',
   routes: [
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) {
@@ -15,8 +15,8 @@ final router = GoRouter(
         StatefulShellBranch(
           routes: [
             GoRoute(
-              path: '/home',
-              builder: (context, state) => const HomeScreen(),
+              path: '/products',
+              builder: (context, state) => const ProductsScreen(),
             ),
           ],
         ),
