@@ -1014,7 +1014,7 @@ class DbSize extends DataClass implements Insertable<DbSize> {
 
   /// Relative magnitude of the size, used to order sizes from smallest to
   /// largest. Seeded with gaps so a Mediano can slot between existing values
-  /// without touching them. See `AppSizeReferences`.
+  /// without touching them. See `lib/db/seed.dart`.
   final int reference;
   final double serverVersion;
   final bool isDirty;
@@ -2838,6 +2838,25 @@ class $DbSalesTable extends DbSales with TableInfo<$DbSalesTable, DbSale> {
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _tipMeta = const VerificationMeta('tip');
+  @override
+  late final GeneratedColumn<int> tip = GeneratedColumn<int>(
+    'tip',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  @override
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+    'notes',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _serverVersionMeta = const VerificationMeta(
     'serverVersion',
   );
@@ -2886,6 +2905,8 @@ class $DbSalesTable extends DbSales with TableInfo<$DbSalesTable, DbSale> {
     soldAt,
     subtotal,
     total,
+    tip,
+    notes,
     serverVersion,
     isDirty,
     isDeleted,
@@ -2930,6 +2951,18 @@ class $DbSalesTable extends DbSales with TableInfo<$DbSalesTable, DbSale> {
       );
     } else if (isInserting) {
       context.missing(_totalMeta);
+    }
+    if (data.containsKey('tip')) {
+      context.handle(
+        _tipMeta,
+        tip.isAcceptableOrUnknown(data['tip']!, _tipMeta),
+      );
+    }
+    if (data.containsKey('notes')) {
+      context.handle(
+        _notesMeta,
+        notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
+      );
     }
     if (data.containsKey('server_version')) {
       context.handle(
@@ -2977,6 +3010,14 @@ class $DbSalesTable extends DbSales with TableInfo<$DbSalesTable, DbSale> {
         DriftSqlType.int,
         data['${effectivePrefix}total'],
       )!,
+      tip: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}tip'],
+      )!,
+      notes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notes'],
+      ),
       serverVersion: attachedDatabase.typeMapping.read(
         DriftSqlType.double,
         data['${effectivePrefix}server_version'],
@@ -3010,6 +3051,14 @@ class DbSale extends DataClass implements Insertable<DbSale> {
   /// the seller may lower it to give a discount on a large order. The discount
   /// is `subtotal - total` — not stored, always derivable.
   final int total;
+
+  /// Cents of Bs the client left on top of [total] — e.g. telling the seller to
+  /// keep the change. Independent of the sale price: it never affects
+  /// [subtotal], [total], or the discount, but it does count as earnings.
+  final int tip;
+
+  /// Optional free-form note the seller can attach to the sale. Null when none.
+  final String? notes;
   final double serverVersion;
   final bool isDirty;
   final bool isDeleted;
@@ -3018,6 +3067,8 @@ class DbSale extends DataClass implements Insertable<DbSale> {
     required this.soldAt,
     required this.subtotal,
     required this.total,
+    required this.tip,
+    this.notes,
     required this.serverVersion,
     required this.isDirty,
     required this.isDeleted,
@@ -3029,6 +3080,10 @@ class DbSale extends DataClass implements Insertable<DbSale> {
     map['sold_at'] = Variable<DateTime>(soldAt);
     map['subtotal'] = Variable<int>(subtotal);
     map['total'] = Variable<int>(total);
+    map['tip'] = Variable<int>(tip);
+    if (!nullToAbsent || notes != null) {
+      map['notes'] = Variable<String>(notes);
+    }
     map['server_version'] = Variable<double>(serverVersion);
     map['is_dirty'] = Variable<bool>(isDirty);
     map['is_deleted'] = Variable<bool>(isDeleted);
@@ -3041,6 +3096,10 @@ class DbSale extends DataClass implements Insertable<DbSale> {
       soldAt: Value(soldAt),
       subtotal: Value(subtotal),
       total: Value(total),
+      tip: Value(tip),
+      notes: notes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(notes),
       serverVersion: Value(serverVersion),
       isDirty: Value(isDirty),
       isDeleted: Value(isDeleted),
@@ -3057,6 +3116,8 @@ class DbSale extends DataClass implements Insertable<DbSale> {
       soldAt: serializer.fromJson<DateTime>(json['soldAt']),
       subtotal: serializer.fromJson<int>(json['subtotal']),
       total: serializer.fromJson<int>(json['total']),
+      tip: serializer.fromJson<int>(json['tip']),
+      notes: serializer.fromJson<String?>(json['notes']),
       serverVersion: serializer.fromJson<double>(json['serverVersion']),
       isDirty: serializer.fromJson<bool>(json['isDirty']),
       isDeleted: serializer.fromJson<bool>(json['isDeleted']),
@@ -3070,6 +3131,8 @@ class DbSale extends DataClass implements Insertable<DbSale> {
       'soldAt': serializer.toJson<DateTime>(soldAt),
       'subtotal': serializer.toJson<int>(subtotal),
       'total': serializer.toJson<int>(total),
+      'tip': serializer.toJson<int>(tip),
+      'notes': serializer.toJson<String?>(notes),
       'serverVersion': serializer.toJson<double>(serverVersion),
       'isDirty': serializer.toJson<bool>(isDirty),
       'isDeleted': serializer.toJson<bool>(isDeleted),
@@ -3081,6 +3144,8 @@ class DbSale extends DataClass implements Insertable<DbSale> {
     DateTime? soldAt,
     int? subtotal,
     int? total,
+    int? tip,
+    Value<String?> notes = const Value.absent(),
     double? serverVersion,
     bool? isDirty,
     bool? isDeleted,
@@ -3089,6 +3154,8 @@ class DbSale extends DataClass implements Insertable<DbSale> {
     soldAt: soldAt ?? this.soldAt,
     subtotal: subtotal ?? this.subtotal,
     total: total ?? this.total,
+    tip: tip ?? this.tip,
+    notes: notes.present ? notes.value : this.notes,
     serverVersion: serverVersion ?? this.serverVersion,
     isDirty: isDirty ?? this.isDirty,
     isDeleted: isDeleted ?? this.isDeleted,
@@ -3099,6 +3166,8 @@ class DbSale extends DataClass implements Insertable<DbSale> {
       soldAt: data.soldAt.present ? data.soldAt.value : this.soldAt,
       subtotal: data.subtotal.present ? data.subtotal.value : this.subtotal,
       total: data.total.present ? data.total.value : this.total,
+      tip: data.tip.present ? data.tip.value : this.tip,
+      notes: data.notes.present ? data.notes.value : this.notes,
       serverVersion: data.serverVersion.present
           ? data.serverVersion.value
           : this.serverVersion,
@@ -3114,6 +3183,8 @@ class DbSale extends DataClass implements Insertable<DbSale> {
           ..write('soldAt: $soldAt, ')
           ..write('subtotal: $subtotal, ')
           ..write('total: $total, ')
+          ..write('tip: $tip, ')
+          ..write('notes: $notes, ')
           ..write('serverVersion: $serverVersion, ')
           ..write('isDirty: $isDirty, ')
           ..write('isDeleted: $isDeleted')
@@ -3127,6 +3198,8 @@ class DbSale extends DataClass implements Insertable<DbSale> {
     soldAt,
     subtotal,
     total,
+    tip,
+    notes,
     serverVersion,
     isDirty,
     isDeleted,
@@ -3139,6 +3212,8 @@ class DbSale extends DataClass implements Insertable<DbSale> {
           other.soldAt == this.soldAt &&
           other.subtotal == this.subtotal &&
           other.total == this.total &&
+          other.tip == this.tip &&
+          other.notes == this.notes &&
           other.serverVersion == this.serverVersion &&
           other.isDirty == this.isDirty &&
           other.isDeleted == this.isDeleted);
@@ -3149,6 +3224,8 @@ class DbSalesCompanion extends UpdateCompanion<DbSale> {
   final Value<DateTime> soldAt;
   final Value<int> subtotal;
   final Value<int> total;
+  final Value<int> tip;
+  final Value<String?> notes;
   final Value<double> serverVersion;
   final Value<bool> isDirty;
   final Value<bool> isDeleted;
@@ -3158,6 +3235,8 @@ class DbSalesCompanion extends UpdateCompanion<DbSale> {
     this.soldAt = const Value.absent(),
     this.subtotal = const Value.absent(),
     this.total = const Value.absent(),
+    this.tip = const Value.absent(),
+    this.notes = const Value.absent(),
     this.serverVersion = const Value.absent(),
     this.isDirty = const Value.absent(),
     this.isDeleted = const Value.absent(),
@@ -3168,6 +3247,8 @@ class DbSalesCompanion extends UpdateCompanion<DbSale> {
     required DateTime soldAt,
     required int subtotal,
     required int total,
+    this.tip = const Value.absent(),
+    this.notes = const Value.absent(),
     this.serverVersion = const Value.absent(),
     this.isDirty = const Value.absent(),
     this.isDeleted = const Value.absent(),
@@ -3181,6 +3262,8 @@ class DbSalesCompanion extends UpdateCompanion<DbSale> {
     Expression<DateTime>? soldAt,
     Expression<int>? subtotal,
     Expression<int>? total,
+    Expression<int>? tip,
+    Expression<String>? notes,
     Expression<double>? serverVersion,
     Expression<bool>? isDirty,
     Expression<bool>? isDeleted,
@@ -3191,6 +3274,8 @@ class DbSalesCompanion extends UpdateCompanion<DbSale> {
       if (soldAt != null) 'sold_at': soldAt,
       if (subtotal != null) 'subtotal': subtotal,
       if (total != null) 'total': total,
+      if (tip != null) 'tip': tip,
+      if (notes != null) 'notes': notes,
       if (serverVersion != null) 'server_version': serverVersion,
       if (isDirty != null) 'is_dirty': isDirty,
       if (isDeleted != null) 'is_deleted': isDeleted,
@@ -3203,6 +3288,8 @@ class DbSalesCompanion extends UpdateCompanion<DbSale> {
     Value<DateTime>? soldAt,
     Value<int>? subtotal,
     Value<int>? total,
+    Value<int>? tip,
+    Value<String?>? notes,
     Value<double>? serverVersion,
     Value<bool>? isDirty,
     Value<bool>? isDeleted,
@@ -3213,6 +3300,8 @@ class DbSalesCompanion extends UpdateCompanion<DbSale> {
       soldAt: soldAt ?? this.soldAt,
       subtotal: subtotal ?? this.subtotal,
       total: total ?? this.total,
+      tip: tip ?? this.tip,
+      notes: notes ?? this.notes,
       serverVersion: serverVersion ?? this.serverVersion,
       isDirty: isDirty ?? this.isDirty,
       isDeleted: isDeleted ?? this.isDeleted,
@@ -3234,6 +3323,12 @@ class DbSalesCompanion extends UpdateCompanion<DbSale> {
     }
     if (total.present) {
       map['total'] = Variable<int>(total.value);
+    }
+    if (tip.present) {
+      map['tip'] = Variable<int>(tip.value);
+    }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
     }
     if (serverVersion.present) {
       map['server_version'] = Variable<double>(serverVersion.value);
@@ -3257,6 +3352,8 @@ class DbSalesCompanion extends UpdateCompanion<DbSale> {
           ..write('soldAt: $soldAt, ')
           ..write('subtotal: $subtotal, ')
           ..write('total: $total, ')
+          ..write('tip: $tip, ')
+          ..write('notes: $notes, ')
           ..write('serverVersion: $serverVersion, ')
           ..write('isDirty: $isDirty, ')
           ..write('isDeleted: $isDeleted, ')
@@ -6787,6 +6884,8 @@ typedef $$DbSalesTableCreateCompanionBuilder =
       required DateTime soldAt,
       required int subtotal,
       required int total,
+      Value<int> tip,
+      Value<String?> notes,
       Value<double> serverVersion,
       Value<bool> isDirty,
       Value<bool> isDeleted,
@@ -6798,6 +6897,8 @@ typedef $$DbSalesTableUpdateCompanionBuilder =
       Value<DateTime> soldAt,
       Value<int> subtotal,
       Value<int> total,
+      Value<int> tip,
+      Value<String?> notes,
       Value<double> serverVersion,
       Value<bool> isDirty,
       Value<bool> isDeleted,
@@ -6853,6 +6954,16 @@ class $$DbSalesTableFilterComposer
 
   ColumnFilters<int> get total => $composableBuilder(
     column: $table.total,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get tip => $composableBuilder(
+    column: $table.tip,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get notes => $composableBuilder(
+    column: $table.notes,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6926,6 +7037,16 @@ class $$DbSalesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get tip => $composableBuilder(
+    column: $table.tip,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<double> get serverVersion => $composableBuilder(
     column: $table.serverVersion,
     builder: (column) => ColumnOrderings(column),
@@ -6962,6 +7083,12 @@ class $$DbSalesTableAnnotationComposer
 
   GeneratedColumn<int> get total =>
       $composableBuilder(column: $table.total, builder: (column) => column);
+
+  GeneratedColumn<int> get tip =>
+      $composableBuilder(column: $table.tip, builder: (column) => column);
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
 
   GeneratedColumn<double> get serverVersion => $composableBuilder(
     column: $table.serverVersion,
@@ -7032,6 +7159,8 @@ class $$DbSalesTableTableManager
                 Value<DateTime> soldAt = const Value.absent(),
                 Value<int> subtotal = const Value.absent(),
                 Value<int> total = const Value.absent(),
+                Value<int> tip = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
                 Value<double> serverVersion = const Value.absent(),
                 Value<bool> isDirty = const Value.absent(),
                 Value<bool> isDeleted = const Value.absent(),
@@ -7041,6 +7170,8 @@ class $$DbSalesTableTableManager
                 soldAt: soldAt,
                 subtotal: subtotal,
                 total: total,
+                tip: tip,
+                notes: notes,
                 serverVersion: serverVersion,
                 isDirty: isDirty,
                 isDeleted: isDeleted,
@@ -7052,6 +7183,8 @@ class $$DbSalesTableTableManager
                 required DateTime soldAt,
                 required int subtotal,
                 required int total,
+                Value<int> tip = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
                 Value<double> serverVersion = const Value.absent(),
                 Value<bool> isDirty = const Value.absent(),
                 Value<bool> isDeleted = const Value.absent(),
@@ -7061,6 +7194,8 @@ class $$DbSalesTableTableManager
                 soldAt: soldAt,
                 subtotal: subtotal,
                 total: total,
+                tip: tip,
+                notes: notes,
                 serverVersion: serverVersion,
                 isDirty: isDirty,
                 isDeleted: isDeleted,

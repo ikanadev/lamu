@@ -19,10 +19,16 @@ class SaleRepository {
   /// [total] is what the seller actually charged, in cents — pass it when they
   /// discounted the order. Left null, the sale is charged at full reference
   /// price.
+  ///
+  /// [tip] is what the client left on top, in cents; it is independent of the
+  /// price and does not affect [total] or the discount. [notes] is an optional
+  /// free-form note.
   Future<String> createSale({
     required List<SaleItemDraft> items,
     DateTime? soldAt,
     int? total,
+    int tip = 0,
+    String? notes,
   }) async {
     if (items.isEmpty) {
       throw ArgumentError('A sale needs at least one item.');
@@ -30,6 +36,12 @@ class SaleRepository {
     if (total != null && total < 0) {
       throw ArgumentError.value(total, 'total', 'Cannot be negative.');
     }
+    if (tip < 0) {
+      throw ArgumentError.value(tip, 'tip', 'Cannot be negative.');
+    }
+    final trimmedNotes = notes?.trim();
+    final normalizedNotes =
+        (trimmedNotes == null || trimmedNotes.isEmpty) ? null : trimmedNotes;
 
     return _database.transaction(() async {
       final saleId = _uuid.v4();
@@ -90,6 +102,8 @@ class SaleRepository {
           .write(DbSalesCompanion(
         subtotal: Value(subtotal),
         total: Value(total ?? subtotal),
+        tip: Value(tip),
+        notes: Value(normalizedNotes),
       ));
 
       return saleId;
@@ -143,8 +157,9 @@ class SaleRepository {
         .toList();
   }
 
-  /// What was actually charged within [from] (inclusive) and [to] (exclusive),
-  /// in cents — the sum of every sale's `total`, discounts included.
+  /// What was actually taken home within [from] (inclusive) and [to]
+  /// (exclusive), in cents — the sum of every sale's `total` (discounts
+  /// included) plus its `tip`.
   ///
   /// Deliberately not broken down per product: a discount applies to the sale
   /// as a whole, so there is no honest way to attribute it to the individual
@@ -154,7 +169,7 @@ class SaleRepository {
     required DateTime to,
   }) async {
     final sales = _database.dbSales;
-    final earned = sales.total.sum();
+    final earned = (sales.total + sales.tip).sum();
 
     final query = _database.selectOnly(sales)
       ..where(sales.isDeleted.equals(false) &
