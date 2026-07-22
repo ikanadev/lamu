@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lamu/domain/models/product.dart';
 
-import 'package:lamu/domain/models/product_sales_summary.dart';
 import 'package:lamu/domain/providers/products/products_summary_provider.dart';
 import 'package:lamu/screens/products/widgets/earnings_header.dart';
 import 'package:lamu/screens/products/widgets/product_card.dart';
+import 'package:lamu/screens/products/widgets/sale_sheet/sale_sheet.dart';
 import 'package:lamu/utils/app_theme.dart';
 import 'package:lamu/widgets/empty_section.dart';
 import 'package:lamu/widgets/error_section.dart';
@@ -48,7 +49,7 @@ class ProductsScreen extends ConsumerWidget {
                                 child: ProductCard(
                                   key: ValueKey(summary.product.id),
                                   summary: summary,
-                                  onTap: () => _showTodo(context, summary),
+                                  onTap: () => _openSaleSheet(context, summary.product),
                                 ),
                               ),
                             ),
@@ -70,19 +71,9 @@ class ProductsScreen extends ConsumerWidget {
     );
   }
 
-  void _showTodo(BuildContext context, ProductSalesSummary summary) {
-    showDialog<void>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(summary.product.name),
-        content: const Text('El registro de ventas aún no está disponible.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cerrar'),
-          ),
-        ],
-      ),
-    );
+  // Static-sketch entry point: opens the collapsible-block sale sheet seeded
+  // with the tapped product. No sale is recorded yet.
+  void _openSaleSheet(BuildContext context, Product product) {
+    showSaleSheet(context: context, selectedProduct: product);
   }
 }

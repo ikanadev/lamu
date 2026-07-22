@@ -15,9 +15,8 @@ class ProductCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    // Seeded products carry a real icon key; the fallback keeps the card
-    // rendering for any unrecognized key.
-    final icon = AppIcons.tryParse(summary.product.icon) ?? AppIcons.sample;
+    // Seeded products carry a real icon key; an unrecognized key renders blank.
+    final icon = AppIcons.tryParse(summary.product.icon);
 
     return Card(
       clipBehavior: Clip.antiAlias,

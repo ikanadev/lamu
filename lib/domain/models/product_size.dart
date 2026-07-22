@@ -8,7 +8,7 @@ class ProductSize {
   final String id;
   final String name;
 
-  /// Relative magnitude, smallest to largest. See `AppSizeReferences`.
+  /// Relative magnitude, smallest to largest. Seeded in `lib/db/seed.dart`.
   final int reference;
 
   const ProductSize({
