@@ -4,12 +4,16 @@ import 'package:vector_graphics/vector_graphics.dart';
 class AppIcon extends StatelessWidget {
   const AppIcon({super.key, required this.icon, this.size = 24, this.color});
 
-  final AppIcons icon;
+  /// Null renders a blank box of [size] — for an unrecognized icon key.
+  final AppIcons? icon;
   final double size;
   final Color? color;
 
   @override
   Widget build(BuildContext context) {
+    final icon = this.icon;
+    if (icon == null) return SizedBox.square(dimension: size);
+
     return VectorGraphic(
       loader: AssetBytesLoader(icon.assetPath),
       width: size,
@@ -21,10 +25,20 @@ class AppIcon extends StatelessWidget {
 }
 
 enum AppIcons {
+  arandano,
+  capuccino,
+  chicle,
+  durazno,
   frappe,
-  juice,
-  sample,
-  strawberryCream;
+  fresa,
+  fresasConCrema,
+  jugo,
+  leche,
+  limon,
+  maracuya,
+  nutella,
+  oreo,
+  tumbo;
 
   String get assetPath => 'assets/icons/vec/$name.vec';
 
