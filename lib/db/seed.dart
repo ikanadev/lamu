@@ -78,7 +78,54 @@ const _flavors = [
 
 const _extras = [
   _Extra('extra:nutella', 'Nutella', 'nutella', 'product:fresasConCrema', 500),
-  _Extra('extra:leche', 'Leche', 'leche', 'product:jugo', 600),
+  _Extra('extra:leche', 'Leche', 'leche', 'product:jugo', 300),
+];
+
+/// One product's sellable variants: a price per size, spread across every flavor
+/// (or a single flavorless variant per size when [flavorKeys] is empty). Prices
+/// are in cents of Bs and are the current reference price.
+class _VariantGroup {
+  const _VariantGroup({
+    required this.productKey,
+    required this.prices,
+    this.flavorKeys = const [],
+  });
+  final String productKey;
+
+  /// Size key -> price in cents. A product need not offer every size.
+  final Map<String, int> prices;
+  final List<String> flavorKeys;
+}
+
+const _variantGroups = [
+  // Fresas con crema — no flavor axis.
+  _VariantGroup(
+    productKey: 'product:fresasConCrema',
+    prices: {'size:small': 1800, 'size:large': 3200},
+  ),
+  _VariantGroup(
+    productKey: 'product:frappe',
+    prices: {'size:small': 1800, 'size:large': 2700},
+    flavorKeys: [
+      'flavor:oreo',
+      'flavor:fresa',
+      'flavor:capuccino',
+      'flavor:chicle',
+    ],
+  ),
+  // Jugos — Large only.
+  _VariantGroup(
+    productKey: 'product:jugo',
+    prices: {'size:large': 1700},
+    flavorKeys: [
+      'flavor:arandano',
+      'flavor:durazno',
+      'flavor:limon',
+      'flavor:tumbo',
+      'flavor:maracuya',
+      'flavor:fresa',
+    ],
+  ),
 ];
 
 /// Ensures the fixed catalog exists: sizes, products, flavors and extras.
@@ -88,8 +135,6 @@ const _extras = [
 /// are inserted; anything already present (including rows the user has since
 /// edited) is left untouched. This is how catalog items introduced in a later
 /// release reach devices that were seeded by an earlier one.
-///
-/// Product *variants* are intentionally not seeded here yet.
 Future<void> ensureCreatedCatalog(AppDatabase db) async {
   await _ensureRows(
     db,
@@ -146,6 +191,27 @@ Future<void> ensureCreatedCatalog(AppDatabase db) async {
           price: e.price,
           icon: e.icon,
         ),
+    },
+  );
+
+  await _ensureRows(
+    db,
+    db.dbProductVariants,
+    idColumn: db.dbProductVariants.id,
+    entries: {
+      for (final g in _variantGroups)
+        for (final flavorKey
+            in (g.flavorKeys.isEmpty ? const [null] : g.flavorKeys))
+          for (final size in g.prices.entries)
+            _seedId('variant:${g.productKey}:${size.key}:${flavorKey ?? 'plain'}'):
+                DbProductVariantsCompanion.insert(
+              id: _seedId(
+                  'variant:${g.productKey}:${size.key}:${flavorKey ?? 'plain'}'),
+              productId: _seedId(g.productKey),
+              sizeId: _seedId(size.key),
+              flavorId: Value(flavorKey == null ? null : _seedId(flavorKey)),
+              price: size.value,
+            ),
     },
   );
 }
