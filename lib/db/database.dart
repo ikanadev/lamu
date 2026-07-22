@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
+import 'package:flutter/foundation.dart';
 
 import 'models/extras.dart';
 import 'models/flavors.dart';
@@ -38,7 +39,12 @@ class AppDatabase extends _$AppDatabase {
     return MigrationStrategy(
       onCreate: (m) async {
         await m.createAll();
-        await seedCatalog(this);
+      },
+      // Runs on every open, so catalog items added in a later release reach
+      // devices seeded by an earlier one. Both seeders are idempotent.
+      beforeOpen: (details) async {
+        await ensureCreatedCatalog(this);
+        if (!kReleaseMode) await seedDummyData(this);
       },
     );
   }

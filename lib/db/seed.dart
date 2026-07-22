@@ -1,141 +1,179 @@
 import 'package:drift/drift.dart';
-import 'package:lamu/utils/size_references.dart';
 import 'package:uuid/uuid.dart';
 
 import 'database.dart';
 
-/// Placeholder icon key for every seeded row, until real icons are designed.
-const _genericIcon = 'sample';
+/// Namespace for the deterministic seed ids below. Any fixed UUID works — it
+/// only has to stay constant so a given seed key always maps to the same id.
+const _seedNamespace = '6f9619ff-8b86-d011-b42d-00cf4fc964ff';
 
-/// Seeds the fixed catalog: the three products, their sizes and flavors, every
-/// sellable variant, and the extras. Called once from
-/// `MigrationStrategy.onCreate`.
-///
-/// Prices here are the *current reference* prices. Changing one later is an
-/// update on the variant row — recorded sales keep their own snapshot.
-Future<void> seedCatalog(AppDatabase db) async {
-  const uuid = Uuid();
+/// Deterministic id for a seed row. Same [key] -> same UUID on every run and
+/// across releases, so `ensureCreatedCatalog` can insert missing rows without
+/// ever duplicating existing ones.
+String _seedId(String key) => const Uuid().v5(_seedNamespace, key);
 
-  // ── Sizes ────────────────────────────────────────────────────────────────
-  final small = uuid.v4();
-  final large = uuid.v4();
+// ── Catalog definition ───────────────────────────────────────────────────────
+// The fixed set of items the app must always have. Add to these lists across
+// releases; `ensureCreatedCatalog` inserts whatever is missing. `key` is a
+// stable identity (never change it once shipped); `icon` matches the `AppIcons`
+// enum name (see lib/widgets/app_icon.dart).
 
-  await db.batch((b) {
-    b.insertAll(db.dbSizes, [
-      DbSizesCompanion.insert(
-        id: small,
-        name: AppSizeReferences.small,
-        reference: AppSizeReferences.byName[AppSizeReferences.small]!,
-      ),
-      DbSizesCompanion.insert(
-        id: large,
-        name: AppSizeReferences.large,
-        reference: AppSizeReferences.byName[AppSizeReferences.large]!,
-      ),
-    ]);
-  });
+class _Size {
+  const _Size(this.key, this.name, this.reference);
+  final String key;
+  final String name;
 
-  // ── Flavors ──────────────────────────────────────────────────────────────
-  final frutilla = uuid.v4();
-  final capuccino = uuid.v4();
-  final chicle = uuid.v4();
-  final limon = uuid.v4();
-  final tumbo = uuid.v4();
-  final maracuya = uuid.v4();
-  final durazno = uuid.v4();
-
-  await db.batch((b) {
-    b.insertAll(db.dbFlavors, [
-      DbFlavorsCompanion.insert(id: frutilla, name: 'Frutilla', icon: _genericIcon),
-      DbFlavorsCompanion.insert(id: capuccino, name: 'Capuccino', icon: _genericIcon),
-      DbFlavorsCompanion.insert(id: chicle, name: 'Chicle', icon: _genericIcon),
-      DbFlavorsCompanion.insert(id: limon, name: 'Limón', icon: _genericIcon),
-      DbFlavorsCompanion.insert(id: tumbo, name: 'Tumbo', icon: _genericIcon),
-      DbFlavorsCompanion.insert(id: maracuya, name: 'Maracuyá', icon: _genericIcon),
-      DbFlavorsCompanion.insert(id: durazno, name: 'Durazno', icon: _genericIcon),
-    ]);
-  });
-
-  // ── Products ─────────────────────────────────────────────────────────────
-  final fresas = uuid.v4();
-  final frape = uuid.v4();
-  final jugo = uuid.v4();
-
-  // Icon keys match the `AppIcons` enum names (see lib/widgets/app_icon.dart).
-  await db.batch((b) {
-    b.insertAll(db.dbProducts, [
-      DbProductsCompanion.insert(
-          id: fresas, name: 'Fresas con crema', icon: 'strawberryCream'),
-      DbProductsCompanion.insert(id: frape, name: 'Frapé', icon: 'frappe'),
-      DbProductsCompanion.insert(id: jugo, name: 'Jugo', icon: 'juice'),
-    ]);
-  });
-
-  // ── Variants ─────────────────────────────────────────────────────────────
-  DbProductVariantsCompanion variant({
-    required String productId,
-    required String sizeId,
-    String? flavorId,
-    required int price,
-  }) {
-    return DbProductVariantsCompanion.insert(
-      id: uuid.v4(),
-      productId: productId,
-      sizeId: sizeId,
-      flavorId: Value(flavorId),
-      price: price,
-    );
-  }
-
-  // Prices in cents of Bs: Bs 18 -> 1800.
-  final frapePrices = {small: 1800, large: 2700};
-  final jugoPrices = {small: 1200, large: 1800};
-
-  await db.batch((b) {
-    b.insertAll(db.dbProductVariants, [
-      // Fresas con crema — no flavor axis.
-      variant(productId: fresas, sizeId: small, price: 1800),
-      variant(productId: fresas, sizeId: large, price: 3200),
-
-      // Frapé — 2 sizes × 3 flavors.
-      for (final flavorId in [frutilla, capuccino, chicle])
-        for (final entry in frapePrices.entries)
-          variant(
-            productId: frape,
-            sizeId: entry.key,
-            flavorId: flavorId,
-            price: entry.value,
-          ),
-
-      // Jugo — 2 sizes × 4 frutas.
-      for (final flavorId in [limon, tumbo, maracuya, durazno])
-        for (final entry in jugoPrices.entries)
-          variant(
-            productId: jugo,
-            sizeId: entry.key,
-            flavorId: flavorId,
-            price: entry.value,
-          ),
-    ]);
-  });
-
-  // ── Extras ───────────────────────────────────────────────────────────────
-  await db.batch((b) {
-    b.insertAll(db.dbExtras, [
-      DbExtrasCompanion.insert(
-        id: uuid.v4(),
-        productId: fresas,
-        name: 'Nutella',
-        price: 500,
-        icon: _genericIcon,
-      ),
-      DbExtrasCompanion.insert(
-        id: uuid.v4(),
-        productId: jugo,
-        name: 'Leche',
-        price: 600,
-        icon: _genericIcon,
-      ),
-    ]);
-  });
+  /// Relative magnitude, smallest to largest. Spaced with gaps so a new size
+  /// (e.g. a Mediano at 7) can slot between existing ones without renumbering.
+  final int reference;
 }
+
+class _Product {
+  const _Product(this.key, this.name, this.icon);
+  final String key;
+  final String name;
+  final String icon;
+}
+
+class _Flavor {
+  const _Flavor(this.key, this.name, this.icon);
+  final String key;
+  final String name;
+  final String icon;
+}
+
+class _Extra {
+  const _Extra(this.key, this.name, this.icon, this.productKey, this.price);
+  final String key;
+  final String name;
+  final String icon;
+  final String productKey;
+
+  /// Cents of Bs.
+  final int price;
+}
+
+const _sizes = [
+  _Size('size:small', 'Pequeño', 5),
+  _Size('size:large', 'Grande', 10),
+];
+
+const _products = [
+  _Product('product:fresasConCrema', 'Fresas con crema', 'fresasConCrema'),
+  _Product('product:frappe', 'Frappé', 'frappe'),
+  _Product('product:jugo', 'Jugos', 'jugo'),
+];
+
+const _flavors = [
+  _Flavor('flavor:oreo', 'Óreo', 'oreo'),
+  _Flavor('flavor:fresa', 'Frutilla', 'fresa'),
+  _Flavor('flavor:capuccino', 'Capuccino', 'capuccino'),
+  _Flavor('flavor:chicle', 'Chicle', 'chicle'),
+  _Flavor('flavor:arandano', 'Arándano', 'arandano'),
+  _Flavor('flavor:durazno', 'Durazno', 'durazno'),
+  _Flavor('flavor:limon', 'Limón', 'limon'),
+  _Flavor('flavor:tumbo', 'Tumbo', 'tumbo'),
+  _Flavor('flavor:maracuya', 'Maracuyá', 'maracuya'),
+];
+
+const _extras = [
+  _Extra('extra:nutella', 'Nutella', 'nutella', 'product:fresasConCrema', 500),
+  _Extra('extra:leche', 'Leche', 'leche', 'product:jugo', 600),
+];
+
+/// Ensures the fixed catalog exists: sizes, products, flavors and extras.
+///
+/// Idempotent — safe to call on every app launch. Rows are keyed by a
+/// deterministic id ([_seedId]), so only the items missing from the current DB
+/// are inserted; anything already present (including rows the user has since
+/// edited) is left untouched. This is how catalog items introduced in a later
+/// release reach devices that were seeded by an earlier one.
+///
+/// Product *variants* are intentionally not seeded here yet.
+Future<void> ensureCreatedCatalog(AppDatabase db) async {
+  await _ensureRows(
+    db,
+    db.dbSizes,
+    idColumn: db.dbSizes.id,
+    entries: {
+      for (final s in _sizes)
+        _seedId(s.key): DbSizesCompanion.insert(
+          id: _seedId(s.key),
+          name: s.name,
+          reference: s.reference,
+        ),
+    },
+  );
+
+  await _ensureRows(
+    db,
+    db.dbProducts,
+    idColumn: db.dbProducts.id,
+    entries: {
+      for (final p in _products)
+        _seedId(p.key): DbProductsCompanion.insert(
+          id: _seedId(p.key),
+          name: p.name,
+          icon: p.icon,
+        ),
+    },
+  );
+
+  await _ensureRows(
+    db,
+    db.dbFlavors,
+    idColumn: db.dbFlavors.id,
+    entries: {
+      for (final f in _flavors)
+        _seedId(f.key): DbFlavorsCompanion.insert(
+          id: _seedId(f.key),
+          name: f.name,
+          icon: f.icon,
+        ),
+    },
+  );
+
+  await _ensureRows(
+    db,
+    db.dbExtras,
+    idColumn: db.dbExtras.id,
+    entries: {
+      for (final e in _extras)
+        _seedId(e.key): DbExtrasCompanion.insert(
+          id: _seedId(e.key),
+          productId: _seedId(e.productKey),
+          name: e.name,
+          price: e.price,
+          icon: e.icon,
+        ),
+    },
+  );
+}
+
+/// Inserts the [entries] (id -> row) whose id is not already present in [table].
+Future<void> _ensureRows<T extends Table, D>(
+  AppDatabase db,
+  TableInfo<T, D> table, {
+  required GeneratedColumn<String> idColumn,
+  required Map<String, Insertable<D>> entries,
+}) async {
+  final present = await (db.selectOnly(table)
+        ..addColumns([idColumn])
+        ..where(idColumn.isIn(entries.keys.toList())))
+      .map((r) => r.read(idColumn)!)
+      .get();
+
+  final missing = [
+    for (final entry in entries.entries)
+      if (!present.contains(entry.key)) entry.value,
+  ];
+  if (missing.isEmpty) return;
+
+  await db.batch((b) => b.insertAll(table, missing));
+}
+
+/// Seeds throwaway data for local testing (sample sales, etc.). Never runs in a
+/// release build — callers guard it behind `kReleaseMode`.
+///
+/// Intentionally empty for now.
+Future<void> seedDummyData(AppDatabase db) async {}

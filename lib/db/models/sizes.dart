@@ -7,7 +7,7 @@ class DbSizes extends Table {
 
   /// Relative magnitude of the size, used to order sizes from smallest to
   /// largest. Seeded with gaps so a Mediano can slot between existing values
-  /// without touching them. See `AppSizeReferences`.
+  /// without touching them. See `lib/db/seed.dart`.
   late final reference = integer()();
 
   late final serverVersion = real().withDefault(const Constant(0))();
