@@ -19,6 +19,9 @@ Future<void> showSaleSheet({
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
+    // Present on the root navigator so the sheet covers the whole screen,
+    // including the bottom navigation bar, rather than the tab's branch area.
+    useRootNavigator: true,
     backgroundColor: Colors.transparent,
     builder: (_) => SaleSheet(selectedProduct: selectedProduct),
   );
@@ -53,36 +56,57 @@ class _SaleSheetState extends ConsumerState<SaleSheet> {
     final draft = ref.watch(saleDraftProvider);
 
     return Padding(
-      // Lift above the keyboard (the override dialog) and give the floating
-      // blocks side margins.
-      padding: EdgeInsets.only(
-        left: AppSpacing.s16,
-        right: AppSpacing.s16,
-        top: AppSpacing.s16,
-        bottom: AppSpacing.s16 + MediaQuery.viewInsetsOf(context).bottom,
-      ),
+      // Lift the whole sheet above the keyboard (the override dialog).
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const TotalBar(),
+          // The total bar and blocks float with side margins; the actions bar
+          // below spans the full width and sits flush to the bottom.
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.s16,
+              AppSpacing.s16,
+              AppSpacing.s16,
+              0,
+            ),
+            child: const TotalBar(),
+          ),
           const SizedBox(height: AppSpacing.s8),
           Flexible(
-            child: ListView.builder(
-              shrinkWrap: true,
-              padding: EdgeInsets.zero,
-              itemCount: draft.lines.length,
-              itemBuilder: (_, i) {
-                final line = draft.lines[i];
-                return SaleBlock(
-                  key: ValueKey(line.lineId),
-                  line: line,
-                  isOpen: line.lineId == draft.openLineId,
-                );
-              },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16),
+              child: ListView.builder(
+                shrinkWrap: true,
+                padding: EdgeInsets.zero,
+                itemCount: draft.lines.length,
+                itemBuilder: (_, i) {
+                  final line = draft.lines[i];
+                  return SaleBlock(
+                    key: ValueKey(line.lineId),
+                    line: line,
+                    isOpen: line.lineId == draft.openLineId,
+                  );
+                },
+              ),
             ),
           ),
           const SizedBox(height: AppSpacing.s8),
-          const ActionsRow(),
+          // Full-width bar pinned to the bottom of the screen: same card as the
+          // total bar, but rounded only at the top since its bottom edge meets
+          // the screen edge.
+          Card(
+            margin: EdgeInsets.zero,
+            shape: const RoundedRectangleBorder(
+              borderRadius:
+                  BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
+            ),
+            child: const Padding(
+              padding: EdgeInsets.all(AppSpacing.s16),
+              child: ActionsRow(),
+            ),
+          ),
         ],
       ),
     );

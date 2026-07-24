@@ -8,6 +8,53 @@ part of 'product_options_provider.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// The full catalog of active products — the source for the sale sheet's
+/// product switcher, where a line can be retargeted to any product.
+
+@ProviderFor(catalogProducts)
+final catalogProductsProvider = CatalogProductsProvider._();
+
+/// The full catalog of active products — the source for the sale sheet's
+/// product switcher, where a line can be retargeted to any product.
+
+final class CatalogProductsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<Product>>,
+          List<Product>,
+          FutureOr<List<Product>>
+        >
+    with $FutureModifier<List<Product>>, $FutureProvider<List<Product>> {
+  /// The full catalog of active products — the source for the sale sheet's
+  /// product switcher, where a line can be retargeted to any product.
+  CatalogProductsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'catalogProductsProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$catalogProductsHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<List<Product>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<Product>> create(Ref ref) {
+    return catalogProducts(ref);
+  }
+}
+
+String _$catalogProductsHash() => r'2d52a9a9cb5ce1e47db3ccf423396f0a84bd13ad';
+
 /// Every sellable variant for one product. The size and flavour option lists
 /// below, and the sale sheet's variant resolution, all derive from this.
 
@@ -35,7 +82,7 @@ final class ProductVariantsProvider
   }) : super(
          retry: null,
          name: r'productVariantsProvider',
-         isAutoDispose: true,
+         isAutoDispose: false,
          dependencies: null,
          $allTransitiveDependencies: null,
        );
@@ -73,7 +120,7 @@ final class ProductVariantsProvider
   }
 }
 
-String _$productVariantsHash() => r'4cc747c8d05e13590237ebad6293b210b538e510';
+String _$productVariantsHash() => r'e90a74d346f44ac6cd5ea0884151db92360cd710';
 
 /// Every sellable variant for one product. The size and flavour option lists
 /// below, and the sale sheet's variant resolution, all derive from this.
@@ -86,7 +133,7 @@ final class ProductVariantsFamily extends $Family
         name: r'productVariantsProvider',
         dependencies: null,
         $allTransitiveDependencies: null,
-        isAutoDispose: true,
+        isAutoDispose: false,
       );
 
   /// Every sellable variant for one product. The size and flavour option lists
@@ -126,7 +173,7 @@ final class ProductSizesProvider
   }) : super(
          retry: null,
          name: r'productSizesProvider',
-         isAutoDispose: true,
+         isAutoDispose: false,
          dependencies: null,
          $allTransitiveDependencies: null,
        );
@@ -164,7 +211,7 @@ final class ProductSizesProvider
   }
 }
 
-String _$productSizesHash() => r'da3b42d6f42a694788999f8264aeb2b39c900c15';
+String _$productSizesHash() => r'a215277d52d4d46268c20bb7ae75a81b7a647bba';
 
 /// Sizes offered by [productId] — the distinct sizes across its variants,
 /// smallest first (the global size list is already ordered by reference).
@@ -177,7 +224,7 @@ final class ProductSizesFamily extends $Family
         name: r'productSizesProvider',
         dependencies: null,
         $allTransitiveDependencies: null,
-        isAutoDispose: true,
+        isAutoDispose: false,
       );
 
   /// Sizes offered by [productId] — the distinct sizes across its variants,
@@ -215,7 +262,7 @@ final class ProductFlavorsProvider
   }) : super(
          retry: null,
          name: r'productFlavorsProvider',
-         isAutoDispose: true,
+         isAutoDispose: false,
          dependencies: null,
          $allTransitiveDependencies: null,
        );
@@ -253,7 +300,7 @@ final class ProductFlavorsProvider
   }
 }
 
-String _$productFlavorsHash() => r'700a51203b29b53f5973bf206ce1af68780bbb2a';
+String _$productFlavorsHash() => r'70ccb83c47b700ae02f55257c78372bb0c9d3b62';
 
 /// Flavours offered by [productId]. Empty for products with no flavour axis
 /// (fresas con crema), whose variants carry a null flavour.
@@ -266,7 +313,7 @@ final class ProductFlavorsFamily extends $Family
         name: r'productFlavorsProvider',
         dependencies: null,
         $allTransitiveDependencies: null,
-        isAutoDispose: true,
+        isAutoDispose: false,
       );
 
   /// Flavours offered by [productId]. Empty for products with no flavour axis
@@ -301,7 +348,7 @@ final class ProductExtrasProvider
   }) : super(
          retry: null,
          name: r'productExtrasProvider',
-         isAutoDispose: true,
+         isAutoDispose: false,
          dependencies: null,
          $allTransitiveDependencies: null,
        );
@@ -339,7 +386,7 @@ final class ProductExtrasProvider
   }
 }
 
-String _$productExtrasHash() => r'cf3a930fea8eb9da3b7bde880ebac71ce0c2b6e5';
+String _$productExtrasHash() => r'8dcc887594bcb45a8ada368131f6e640fe77af6c';
 
 /// Extras available for [productId].
 
@@ -351,7 +398,7 @@ final class ProductExtrasFamily extends $Family
         name: r'productExtrasProvider',
         dependencies: null,
         $allTransitiveDependencies: null,
-        isAutoDispose: true,
+        isAutoDispose: false,
       );
 
   /// Extras available for [productId].

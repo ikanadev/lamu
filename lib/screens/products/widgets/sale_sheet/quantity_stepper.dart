@@ -18,9 +18,8 @@ class QuantityStepper extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Text('Cantidad', style: theme.textTheme.bodyMedium),
-        const Spacer(),
         IconButton.outlined(
           onPressed: quantity > 1 ? onDecrement : null,
           icon: const Icon(Icons.remove),

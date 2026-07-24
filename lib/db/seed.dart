@@ -3,9 +3,10 @@ import 'package:uuid/uuid.dart';
 
 import 'database.dart';
 
-/// Namespace for the deterministic seed ids below. Any fixed UUID works — it
-/// only has to stay constant so a given seed key always maps to the same id.
-const _seedNamespace = '6f9619ff-8b86-d011-b42d-00cf4fc964ff';
+/// Namespace for the deterministic seed ids below. Must be a valid RFC-4122
+/// UUID (the uuid package validates the namespace strictly), and has to stay
+/// constant so a given seed key always maps to the same id.
+const _seedNamespace = '0d84a792-6b4d-478f-8520-8675f1870054';
 
 /// Deterministic id for a seed row. Same [key] -> same UUID on every run and
 /// across releases, so `ensureCreatedCatalog` can insert missing rows without
